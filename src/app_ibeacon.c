@@ -27,7 +27,7 @@ void app_ibeacon_sd_evt_signal_handler(uint32_t event)
     }
 }
 
-static uint32_t m_get_adv_packet(void)
+static uint8_t * m_get_adv_packet(void)
 {
     static uint8_t adv_pdu[40] = {
         /*  0 */  0x02, // ADV_NONCONN_IND + rfu
@@ -73,45 +73,61 @@ static uint32_t m_get_adv_packet(void)
         };
     (void) adv_pdu;
 
-    return (uint32_t) &adv_pdu[0];
+    return &adv_pdu[0];
 }
 
-static void m_configure_radio(void)
+static void m_configure_radio(uint32_t channel)
 {
-  NRF_RADIO->POWER        = 1;
-  NRF_RADIO->PCNF0        =   (((1UL) << RADIO_PCNF0_S0LEN_Pos) & RADIO_PCNF0_S0LEN_Msk)
-                            | (((2UL) << RADIO_PCNF0_S1LEN_Pos) & RADIO_PCNF0_S1LEN_Msk)
-                            | (((6UL) << RADIO_PCNF0_LFLEN_Pos) & RADIO_PCNF0_LFLEN_Msk);
-  NRF_RADIO->PCNF1        =   (((RADIO_PCNF1_ENDIAN_Little) << RADIO_PCNF1_ENDIAN_Pos)  & RADIO_PCNF1_ENDIAN_Msk)
-                            | (((3UL)                       << RADIO_PCNF1_BALEN_Pos)   & RADIO_PCNF1_BALEN_Msk)
-                            | (((0UL)                       << RADIO_PCNF1_STATLEN_Pos) & RADIO_PCNF1_STATLEN_Msk)
-                            | ((((uint32_t) 37)  << RADIO_PCNF1_MAXLEN_Pos)      & RADIO_PCNF1_MAXLEN_Msk)
-                            | ((RADIO_PCNF1_WHITEEN_Enabled << RADIO_PCNF1_WHITEEN_Pos) & RADIO_PCNF1_WHITEEN_Msk);
-  NRF_RADIO->CRCCNF       =   (((RADIO_CRCCNF_SKIP_ADDR_Skip) << RADIO_CRCCNF_SKIP_ADDR_Pos) & RADIO_CRCCNF_SKIP_ADDR_Msk)
-                            | (((RADIO_CRCCNF_LEN_Three)      << RADIO_CRCCNF_LEN_Pos)       & RADIO_CRCCNF_LEN_Msk);
-  NRF_RADIO->CRCPOLY      = 0x0000065b;
-  NRF_RADIO->RXADDRESSES  = ( (RADIO_RXADDRESSES_ADDR0_Enabled) << RADIO_RXADDRESSES_ADDR0_Pos);
-  NRF_RADIO->SHORTS       = ((1 << RADIO_SHORTS_READY_START_Pos) | (1 << RADIO_SHORTS_END_DISABLE_Pos));
-  NRF_RADIO->MODE         = ((RADIO_MODE_MODE_Ble_1Mbit) << RADIO_MODE_MODE_Pos) & RADIO_MODE_MODE_Msk;
-  NRF_RADIO->TIFS         = 150;
-  NRF_RADIO->INTENSET     = (1 << RADIO_INTENSET_DISABLED_Pos);
-  NRF_RADIO->PREFIX0      = 0x0000008e; //access_addr[3]
-  NRF_RADIO->BASE0        = 0x89bed600; //access_addr[0:3]
-  NRF_RADIO->CRCINIT      = 0x00555555;
-  NRF_RADIO->FREQUENCY    = 2;
-  NRF_RADIO->DATAWHITEIV  = 0x65; // why?
-  NRF_RADIO->PACKETPTR    = m_get_adv_packet();
+    uint8_t * p_adv_pdu = m_get_adv_packet();
+    p_adv_pdu[23]       = (uint8_t) channel & 0xff;
 
-  NVIC_EnableIRQ(RADIO_IRQn);
+    NRF_RADIO->POWER        = 1;
+    NRF_RADIO->PCNF0        =   (((1UL) << RADIO_PCNF0_S0LEN_Pos) & RADIO_PCNF0_S0LEN_Msk)
+                              | (((2UL) << RADIO_PCNF0_S1LEN_Pos) & RADIO_PCNF0_S1LEN_Msk)
+                              | (((6UL) << RADIO_PCNF0_LFLEN_Pos) & RADIO_PCNF0_LFLEN_Msk);
+    NRF_RADIO->PCNF1        =   (((RADIO_PCNF1_ENDIAN_Little)   << RADIO_PCNF1_ENDIAN_Pos)     & RADIO_PCNF1_ENDIAN_Msk)
+                              | (((3UL)                         << RADIO_PCNF1_BALEN_Pos)      & RADIO_PCNF1_BALEN_Msk)
+                              | (((0UL)                         << RADIO_PCNF1_STATLEN_Pos)    & RADIO_PCNF1_STATLEN_Msk)
+                              | ((((uint32_t) 37)               << RADIO_PCNF1_MAXLEN_Pos)     & RADIO_PCNF1_MAXLEN_Msk)
+                              | ((RADIO_PCNF1_WHITEEN_Enabled   << RADIO_PCNF1_WHITEEN_Pos)    & RADIO_PCNF1_WHITEEN_Msk);
+    NRF_RADIO->CRCCNF       =   (((RADIO_CRCCNF_SKIP_ADDR_Skip) << RADIO_CRCCNF_SKIP_ADDR_Pos) & RADIO_CRCCNF_SKIP_ADDR_Msk)
+                              | (((RADIO_CRCCNF_LEN_Three)      << RADIO_CRCCNF_LEN_Pos)       & RADIO_CRCCNF_LEN_Msk);
+    NRF_RADIO->CRCPOLY      = 0x0000065b;
+    NRF_RADIO->RXADDRESSES  = ( (RADIO_RXADDRESSES_ADDR0_Enabled) << RADIO_RXADDRESSES_ADDR0_Pos);
+    NRF_RADIO->SHORTS       = ((1 << RADIO_SHORTS_READY_START_Pos) | (1 << RADIO_SHORTS_END_DISABLE_Pos));
+    NRF_RADIO->MODE         = ((RADIO_MODE_MODE_Ble_1Mbit) << RADIO_MODE_MODE_Pos) & RADIO_MODE_MODE_Msk;
+    NRF_RADIO->TIFS         = 150;
+    NRF_RADIO->INTENSET     = (1 << RADIO_INTENSET_DISABLED_Pos);
+    NRF_RADIO->PREFIX0      = 0x0000008e; //access_addr[3]
+    NRF_RADIO->BASE0        = 0x89bed600; //access_addr[0:3]
+    NRF_RADIO->CRCINIT      = 0x00555555;
+    if (channel == 37)
+    {
+        NRF_RADIO->FREQUENCY    =  2;
+        NRF_RADIO->DATAWHITEIV  = 37;
+    }
+    if (channel == 38)
+    {
+        NRF_RADIO->FREQUENCY    = 26;
+        NRF_RADIO->DATAWHITEIV  = 38;
+    }
+    if (channel == 39)
+    {
+        NRF_RADIO->FREQUENCY    = 80;
+        NRF_RADIO->DATAWHITEIV  = 39;
+    }
+    NRF_RADIO->PACKETPTR    = (uint32_t) p_adv_pdu;
+    
+    NVIC_EnableIRQ(RADIO_IRQn);
 }
 
 void m_configure_next_event(void)
 {
-  m_timeslot_request.request_type              = NRF_RADIO_REQ_TYPE_NORMAL;
-  m_timeslot_request.params.normal.hfclk       = NRF_RADIO_HFCLK_CFG_DEFAULT;
-  m_timeslot_request.params.normal.priority    = NRF_RADIO_PRIORITY_NORMAL;
-  m_timeslot_request.params.normal.distance_us = m_slot_distance;
-  m_timeslot_request.params.normal.length_us   = m_slot_length;
+    m_timeslot_request.request_type              = NRF_RADIO_REQ_TYPE_NORMAL;
+    m_timeslot_request.params.normal.hfclk       = NRF_RADIO_HFCLK_CFG_DEFAULT;
+    m_timeslot_request.params.normal.priority    = NRF_RADIO_PRIORITY_NORMAL;
+    m_timeslot_request.params.normal.distance_us = m_slot_distance;
+    m_timeslot_request.params.normal.length_us   = m_slot_length;
 }
 
 static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t signal_type)
@@ -127,78 +143,39 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
     // Set state machine
     mode = 0;
 
-    // setup radio
-    m_configure_radio();
-
-    // Start RADIO on timer
+    // Configure PPI
     NRF_PPI->CH[8].TEP    = (uint32_t)(&NRF_RADIO->TASKS_TXEN);
     NRF_PPI->CH[8].EEP    = (uint32_t)(&NRF_RADIO_MULTITIMER->EVENTS_COMPARE[0]);
     NRF_PPI->CHENSET      = (1 << 8);
 
-    NRF_RADIO_MULTITIMER->CC[0]             = 200;
-    NRF_RADIO_MULTITIMER->INTENSET          = TIMER_INTENSET_COMPARE0_Msk;
-    NVIC_EnableIRQ(NRF_RADIO_MULTITIMER_IRQn);
-  }
-  else if (signal_type == NRF_RADIO_CALLBACK_SIGNAL_TYPE_MULTITIMER)
-  {
-    if ( NRF_RADIO_MULTITIMER->EVENTS_COMPARE[0] == 1 )
-    { // Radio start, do nothing
-      // TODO: Why two calls here?
-      NRF_RADIO_MULTITIMER->EVENTS_COMPARE[0] = 0;
-      NRF_RADIO->SHORTS       = ((1 << RADIO_SHORTS_READY_START_Pos)
-                               | (1 << RADIO_SHORTS_END_DISABLE_Pos)
-                               | (1 << RADIO_SHORTS_DISABLED_RXEN_Pos));
-    }
-    else if ( NRF_RADIO_MULTITIMER->EVENTS_COMPARE[1] == 1 )
-    { // hcto, end event
-      NRF_RADIO_MULTITIMER->EVENTS_COMPARE[1] = 0;
-      if (mode == 1 || mode == 4) // rx hcto on ch 37, 38
-      { 
-        mode++;
-        NRF_RADIO->SHORTS        = ((1 << RADIO_SHORTS_READY_START_Pos) | (1 << RADIO_SHORTS_END_DISABLE_Pos));
-        NRF_RADIO->TASKS_DISABLE = 1;
-        while (NRF_RADIO->EVENTS_DISABLED == 0) {}
-        NRF_RADIO->SHORTS       = ((1 << RADIO_SHORTS_READY_START_Pos)
-                                 | (1 << RADIO_SHORTS_END_DISABLE_Pos)
-                                 | (1 << RADIO_SHORTS_DISABLED_RXEN_Pos));
-      }
-      else if (mode == 7) // rx hcto on ch 39
-      { 
-        mode++;
-        NRF_RADIO->SHORTS        = ((1 << RADIO_SHORTS_READY_START_Pos) | (1 << RADIO_SHORTS_END_DISABLE_Pos));
-        NRF_RADIO->TASKS_DISABLE = 1;
-      }
-      else
-      {
-        signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
-      }
-    }
-    else
-    {
-      while (true) {}
-    }
+    // setup radio
+    m_configure_radio(37); // 10
+    NRF_RADIO->TASKS_TXEN = 1;
   }
   else if (signal_type == NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO)
   {
     if (NRF_RADIO->EVENTS_DISABLED == 1)
     {
       NRF_RADIO->EVENTS_DISABLED = 0;
-      if (mode == 0 || mode == 3 || mode == 6) // rx on ch 37, 38, 39
-      { 
+
+      if (mode == 0)
+      {
         mode++;
-        // Set up HCTO
-        NRF_RADIO_MULTITIMER->INTENSET          = TIMER_INTENSET_COMPARE1_Msk;
-        NRF_RADIO_MULTITIMER->CC[1]             = 800;
         NRF_RADIO_MULTITIMER->TASKS_CLEAR       = 1;
+        NRF_RADIO_MULTITIMER->CC[0]             = 400;
+
+        m_configure_radio(38);
       }
-      else if (mode == 2 || mode == 5) // tx on ch 38, 38, 39
-      { 
-        NRF_RADIO_MULTITIMER->CC[0]             = NRF_RADIO_MULTITIMER->CC[1] + 600;
+      else if (mode == 1)
+      {
         mode++;
+        NRF_RADIO_MULTITIMER->TASKS_CLEAR       = 1;
+        NRF_RADIO_MULTITIMER->CC[0]             = 400;
+
+        m_configure_radio(39);
       }
-      else if (mode == 8) // done
+      else
       { 
-        mode++;
         if (! m_keep_running)
         {
           signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
@@ -215,12 +192,6 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
           signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
         }
       }
-      else
-      {
-        while (true) {}
-        NRF_RADIO_MULTITIMER->INTENCLR          = TIMER_INTENSET_COMPARE1_Msk;
-        signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
-      }
     }
   }
   else
@@ -233,8 +204,8 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
 
 void app_ibeacon_init(void)
 {
-    m_slot_distance = 36500;
-    m_slot_length   =  5500;
+    m_slot_distance = 365000;
+    m_slot_length   =   5500;
 }
 
 void app_ibeacon_start(void)
