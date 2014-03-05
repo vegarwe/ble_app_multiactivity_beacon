@@ -21,6 +21,8 @@
 #include "ble_gatt.h"
 #include "nrf_svc.h"
 
+/** @addtogroup BLE_GATTS_ENUMERATIONS Enumerations
+ * @{ */
 
 /**
  * @brief GATTS API SVC numbers.
@@ -40,6 +42,7 @@ enum BLE_GATTS_SVCS
   SD_BLE_GATTS_SYS_ATTR_GET,                     /**< Get updated persistent system attributes after terminating a connection. */
 };
 
+/** @} */
 
 /** @addtogroup BLE_GATTS_DEFINES Defines
  * @{ */
@@ -108,6 +111,9 @@ enum BLE_GATTS_SVCS
 
 
 /** @} */
+
+/** @addtogroup BLE_GATTS_STRUCTURES Structures
+ * @{ */
 
 /**@brief Attribute metadata. */
 typedef struct
@@ -297,6 +303,10 @@ typedef struct
   } params;
 } ble_gatts_evt_t;
 
+/** @} */
+
+/** @addtogroup BLE_GATTS_FUNCTIONS Functions
+ * @{ */
 
 /**@brief Add a service declaration to the local server ATT table.
  *
@@ -539,6 +549,7 @@ SVCALL(SD_BLE_GATTS_SYS_ATTR_SET, uint32_t, sd_ble_gatts_sys_attr_set(uint16_t c
  */ 
 SVCALL(SD_BLE_GATTS_SYS_ATTR_GET, uint32_t, sd_ble_gatts_sys_attr_get(uint16_t conn_handle, uint8_t * const p_sys_attr_data, uint16_t* const p_len)); 
 
+/** @} */
 
 #endif // BLE_GATTS_H__
 

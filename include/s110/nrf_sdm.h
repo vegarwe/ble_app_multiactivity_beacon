@@ -145,7 +145,7 @@ SVCALL(SD_SOFTDEVICE_IS_ENABLED, uint32_t, sd_softdevice_is_enabled(uint8_t * p_
 
 /**@brief Start forwarding interrupts to application.
  * 
- * This function is only intended to be called when a bootloader is enabled is used.
+ * This function is only intended to be called when a bootloader is enabled.
  * The bootloader should call this right before it starts the application. 
  * It is recommended that all interrupt sources are off when this is called, 
  * or you could end up having interrupts in the application being executed before main() of the application.

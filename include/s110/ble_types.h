@@ -134,6 +134,9 @@
 
 /** @} */
 
+/** @addtogroup BLE_TYPES_STRUCTURES Structures
+ * @{ */
+
 /** @brief 128 bit UUID values. */
 typedef struct
 { 
@@ -147,7 +150,7 @@ typedef struct
     uint8_t     type; /**< UUID type, see @ref BLE_UUID_TYPES. If type is BLE_UUID_TYPE_UNKNOWN, the value of uuid is undefined. */
 } ble_uuid_t;
 
-
+/** @} */
 
 #endif /* BLE_TYPES_H__ */
 

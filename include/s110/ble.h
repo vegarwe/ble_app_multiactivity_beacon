@@ -26,6 +26,9 @@
 #include "ble_gattc.h"
 #include "ble_gatts.h"
 
+/** @addtogroup BLE_COMMON_ENUMERATIONS Enumerations
+ * @{ */
+
 /**
  * @brief Common API SVC numbers.
  */
@@ -40,6 +43,11 @@ enum BLE_COMMON_SVCS
   SD_BLE_USER_MEM_REPLY,                /**< User Memory Reply. */
 };
 
+/** @} */
+
+/** @addtogroup BLE_COMMON_DEFINES Defines
+ * @{ */
+
 /** @brief  Required pointer alignment for BLE Events.
 */
 #define BLE_EVTS_PTR_ALIGNMENT    4
@@ -53,6 +61,11 @@ enum BLE_COMMON_SVCS
 /** @brief  Maximum number of Vendor Specific UUIDs.
 */
 #define BLE_UUID_VS_MAX_COUNT     10
+
+/** @} */
+
+/** @addtogroup BLE_COMMON_STRUCTURES Structures
+ * @{ */
 
 /**
  * @brief BLE Module Independent Event IDs.
@@ -137,6 +150,10 @@ typedef struct
   uint16_t  subversion_number;          /**< LMP Sub Version number corresponds to the SoftDevice Config ID. */
 } ble_version_t;
 
+/** @} */
+
+/** @addtogroup BLE_COMMON_FUNCTIONS Functions
+ * @{ */
 
 /**@brief Get an event from the pending events queue.
  *
@@ -293,6 +310,8 @@ SVCALL(SD_BLE_VERSION_GET, uint32_t, sd_ble_version_get(ble_version_t * p_versio
  * @return @ref NRF_ERROR_INVALID_STATE   No execute write request pending.
  */
 SVCALL(SD_BLE_USER_MEM_REPLY, uint32_t, sd_ble_user_mem_reply(uint16_t conn_handle, ble_user_mem_block_t *p_block));
+
+/** @} */
 
 #endif /* BLE_H__ */
 

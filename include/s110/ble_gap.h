@@ -18,6 +18,10 @@
 #include "ble_ranges.h"
 #include "nrf_svc.h"
 
+
+/** @addtogroup BLE_GAP_ENUMERATIONS Enumerations 
+ * @{ */
+
 /**
  * @brief GAP API SVC numbers.
  */
@@ -46,6 +50,7 @@ enum BLE_GAP_SVCS
   SD_BLE_GAP_RSSI_STOP,                        /**< Stop reporting of changes in RSSI. */ 
 };
 
+/** @} */
 
 /** @addtogroup BLE_GAP_DEFINES Defines
  * @{ */
@@ -264,11 +269,12 @@ enum BLE_GAP_SVCS
 /** @defgroup GAP_SEC_MODES GAP Security Modes
  * @{ */
 #define BLE_GAP_SEC_MODE 0x00 /**< No key (may be used to reject). */
+/** @} */
 
 /** @} */
 
-
-/** @} */
+/** @addtogroup BLE_GAP_STRUCTURES Structures
+ * @{ */
 
 /**@brief Bluetooth Low Energy address. */
 typedef struct
@@ -571,6 +577,11 @@ typedef struct
 
 } ble_gap_evt_t;
 
+/** @} */
+
+
+/** @addtogroup BLE_GAP_FUNCTIONS Functions
+ * @{ */
 
 /**@brief Set local Bluetooth address.
  *
@@ -887,6 +898,8 @@ SVCALL(SD_BLE_GAP_RSSI_START, uint32_t, sd_ble_gap_rssi_start(uint16_t conn_hand
  * @return @ref BLE_ERROR_INVALID_CONN_HANDLE Invalid connection handle supplied.
  */
 SVCALL(SD_BLE_GAP_RSSI_STOP, uint32_t, sd_ble_gap_rssi_stop(uint16_t conn_handle));
+
+/** @} */
 
 #endif // BLE_GAP_H__
 
