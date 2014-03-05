@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include "app_ibeacon.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -231,7 +231,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   return ( &signal_callback_return_param );
 }
 
-void app_ibeacon_setup(void)
+void app_ibeacon_init(void)
 {
     m_slot_distance = 36500;
     m_slot_length   =  5500;
@@ -241,7 +241,7 @@ void app_ibeacon_start(void)
 {
     m_keep_running = true;
 
-    sd_radio_session_open(test_complete_valid_usecase_timeslot_callback);
+    sd_radio_session_open(m_timeslot_callback);
     
     m_timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
     m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_DEFAULT;

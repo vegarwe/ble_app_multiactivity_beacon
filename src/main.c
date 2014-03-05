@@ -72,6 +72,9 @@ int main(void)
     uint32_t err_code;
 
     ble_stack_init();
+    app_ibeacon_init();
+
+    app_ibeacon_start();
 
     for (;;)
     {
