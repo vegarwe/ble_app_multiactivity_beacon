@@ -1,4 +1,4 @@
-#include "app_ibeacon.h"
+#include "app_beacon.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -12,7 +12,7 @@ static bool volatile                   m_keep_running;
 static uint32_t                        m_slot_distance;
 static uint32_t                        m_slot_length;
 
-void app_ibeacon_sd_evt_signal_handler(uint32_t event)
+void app_beacon_sd_evt_signal_handler(uint32_t event)
 {
     switch (event)
     {
@@ -202,13 +202,13 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
   return ( &signal_callback_return_param );
 }
 
-void app_ibeacon_init(void)
+void app_beacon_init(void)
 {
     m_slot_distance = 365000;
     m_slot_length   =   5500;
 }
 
-void app_ibeacon_start(void)
+void app_beacon_start(void)
 {
     m_keep_running = true;
 

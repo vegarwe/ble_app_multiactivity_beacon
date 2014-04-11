@@ -412,9 +412,9 @@
               <FilePath>..\src\main.c</FilePath>
             </File>
             <File>
-              <FileName>app_ibeacon.c</FileName>
+              <FileName>app_beacon.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\src\app_ibeacon.c</FilePath>
+              <FilePath>..\src\app_beacon.c</FilePath>
             </File>
           </Files>
         </Group>

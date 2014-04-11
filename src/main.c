@@ -6,7 +6,7 @@
 #include "nrf_soc.h"
 #include "nrf_sdm.h"
 
-#include "app_ibeacon.h"
+#include "app_beacon.h"
 
 void assert_nrf_callback(uint32_t pc, uint16_t line_num, const uint8_t * p_file_name)
 {
@@ -72,9 +72,9 @@ int main(void)
     uint32_t err_code;
 
     ble_stack_init();
-    app_ibeacon_init();
+    app_beacon_init();
 
-    app_ibeacon_start();
+    app_beacon_start();
 
     for (;;)
     {
