@@ -5,66 +5,13 @@
  * agreement with Nordic Semiconductor.
  *
  */
-
+ 
 /**
   @defgroup nrf_soc_api SoC Library API
   @{
-
+  
   @brief APIs for the SoC library.
-
-
-  @section nrf_soc_flash SoC Flash API
-
-    Fisken fjase Fisken fjase Fisken fjase Fisken fjase Fisken fjase
-    Fisken fjase Fisken fjase Fisken fjase Fisken fjase Fisken fjase
-
-    Function calls that are part of this api
-    - @ref sd_flash_page_erase
-    - @ref sd_flash_protect
-    - @ref sd_flash_write
-
-  @section nrf_soc_radio_timeslot SoC Radio Timeslot API
-
-    Blipp flyndre til middag Blipp flyndre til middag Blipp flyndre til middag
-    Blipp flyndre til middag Blipp flyndre til middag Blipp flyndre til middag
-    Blipp flyndre til middag Blipp flyndre til middag Blipp flyndre til middag
-    Blipp flyndre til middag Blipp flyndre til middag Blipp flyndre til middag
-    Blipp flyndre til middag Blipp flyndre til middag Blipp flyndre til middag
-
-    @code
-      nrf_radio_signal_callback_return_param_t * timeslot_callback(uint8_t signal_type)
-      {
-        static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
-
-        signal_callback_return_param.p_next_request  = NULL;
-        signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
-
-        if (signal_type == NRF_RADIO_CALLBACK_SIGNAL_TYPE_START)
-        {
-          signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_END;
-        }
-
-        return ( &signal_callback_return_param );
-      }
-
-      void main(void)
-      {
-        sd_radio_session_open(timeslot_callback);
-        m_timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
-        m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_DEFAULT;
-        m_timeslot_request.params.earliest.priority    = NRF_RADIO_PRIORITY_NORMAL;
-        m_timeslot_request.params.earliest.length_us   = m_slot_length;
-        m_timeslot_request.params.earliest.timeout_us  = 1000000;
-        sd_radio_request(&m_timeslot_request);
-      }
-    @endcode
-
-
-    Function calls that are part of this api
-    - @ref sd_radio_session_open
-    - @ref sd_radio_session_close
-    - @ref sd_radio_request
-
+  
 */
 
 #ifndef NRF_SOC_H__
@@ -82,9 +29,13 @@
 
 /**@brief The number of the lowest SVC number reserved for the SoC library. */
 #define SOC_SVC_BASE 0x20
+#define SOC_SVC_BASE_NOT_AVAILABLE 0x23
 
 /**@brief Guranteed time for application to process radio inactive notification. */
 #define NRF_RADIO_NOTIFICATION_INACTIVE_GUARANTEED_TIME_US   (62)
+
+/** @brief The minimum allowed timeslot extension time. */
+#define NRF_RADIO_MINIMUM_TIMESLOT_LENGTH_EXTENSION_TIME_US  (200)
 
 #define SOC_ECB_KEY_LENGTH            (16)                       /**< ECB key length. */
 #define SOC_ECB_CLEARTEXT_LENGTH      (16)                       /**< ECB cleartext length. */
@@ -114,7 +65,10 @@
 /**@brief The SVC numbers used by the SVC functions in the SoC library. */
 enum NRF_SOC_SVCS
 {
-  SD_MUTEX_NEW = SOC_SVC_BASE,
+  SD_FLASH_PAGE_ERASE = SOC_SVC_BASE,
+  SD_FLASH_WRITE,
+  SD_FLASH_PROTECT,
+  SD_MUTEX_NEW = SOC_SVC_BASE_NOT_AVAILABLE,
   SD_MUTEX_ACQUIRE,
   SD_MUTEX_RELEASE,
   SD_NVIC_ENABLEIRQ,
@@ -162,9 +116,6 @@ enum NRF_SOC_SVCS
   SD_RADIO_REQUEST,
   SD_EVT_GET,
   SD_TEMP_GET,
-  SD_FLASH_PAGE_ERASE,
-  SD_FLASH_WRITE,
-  SD_FLASH_PROTECT,
   SVC_SOC_LAST
 };
 
@@ -276,9 +227,11 @@ typedef uint8_t nrf_radio_notification_type_t;
 /** @brief The Radio signal callback types. */
 enum NRF_RADIO_CALLBACK_SIGNAL_TYPE
 {
-  NRF_RADIO_CALLBACK_SIGNAL_TYPE_START,             /**< This signal indicates the start of the radio timeslot. */
-  NRF_RADIO_CALLBACK_SIGNAL_TYPE_MULTITIMER,        /**< This signal indicates the NRF_RADIO_MULTITIMER interrupt. */
-  NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO              /**< This signal indicates the NRF_RADIO interrupt. */
+  NRF_RADIO_CALLBACK_SIGNAL_TYPE_START,            /**< This signal indicates the start of the radio timeslot. */
+  NRF_RADIO_CALLBACK_SIGNAL_TYPE_MULTITIMER,       /**< This signal indicates the NRF_RADIO_MULTITIMER interrupt. */
+  NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO,            /**< This signal indicates the NRF_RADIO interrupt. */
+  NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_FAILED,    /**< This signal indicates extend action failed. */
+  NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED  /**< This signal indicates extend action succeeded. */
 };
 
 /** @brief The actions requested by the signal callback.
@@ -289,6 +242,7 @@ enum NRF_RADIO_CALLBACK_SIGNAL_TYPE
 enum NRF_RADIO_SIGNAL_CALLBACK_ACTION
 {
   NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE,            /**< Return without action. */
+  NRF_RADIO_SIGNAL_CALLBACK_ACTION_EXTEND,          /**< Request an extension of the current timeslot. */
   NRF_RADIO_SIGNAL_CALLBACK_ACTION_END,             /**< End the current radio timeslot. */
   NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END  /**< Request a new radio timeslot and end the current timeslot. */
 };
@@ -347,7 +301,17 @@ typedef struct
 typedef struct
 {
   uint8_t               callback_action;            /**< The action requested by the application when returning from the signal callback, see @ref NRF_RADIO_SIGNAL_CALLBACK_ACTION. */
-  nrf_radio_request_t * p_next_request;             /**< The request parameters for the next radio timeslot. Only used if the callback_action is NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END. */
+  union
+  {
+    struct
+    {
+      nrf_radio_request_t * p_next;       /**< The request parameters for the next radio timeslot. */
+    } request;                            /**< Additional parameters for return_code NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END. */
+    struct
+    {
+      uint32_t              length_us;    /**< Requested extension of the timeslot duration (microseconds). */
+    } extend;                             /**< Additional parameters for return_code NRF_RADIO_SIGNAL_CALLBACK_ACTION_EXTEND. */
+  } params;
 } nrf_radio_signal_callback_return_param_t;
 
 /** @brief The radio signal callback type.

@@ -492,7 +492,7 @@ typedef struct
 
 
 /** @brief Security levels supported.
- *  @note See Bluetooth Specification Version 4.0 Volume 3, Chapter 10.
+ *  @note See Bluetooth Specification Version 4.1 Volume 3, Part C, Chapter 10.
 */
 typedef struct
 {

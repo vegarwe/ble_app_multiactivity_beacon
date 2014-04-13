@@ -39,7 +39,7 @@ enum BLE_COMMON_SVCS
   SD_BLE_UUID_VS_ADD,                   /**< Add a Vendor Specific UUID. */
   SD_BLE_UUID_DECODE,                   /**< Decode UUID bytes. */
   SD_BLE_UUID_ENCODE,                   /**< Encode UUID bytes. */
-  SD_BLE_VERSION_GET,                   /**< Get the local version information (company id, LMP Version, LMP Subversion). */
+  SD_BLE_VERSION_GET,                   /**< Get the local version information (company id, Link Layer Version, Link Layer Subversion). */
   SD_BLE_USER_MEM_REPLY,                /**< User Memory Reply. */
 };
 
@@ -145,9 +145,9 @@ typedef struct
  */
 typedef struct
 {
-  uint8_t   version_number;             /**< LMP Version number for BT 4.0 spec is 6 (https://www.bluetooth.org/technical/assignednumbers/link_layer.htm). */
+  uint8_t   version_number;             /**< Link Layer Version number for BT 4.1 spec is 7 (https://www.bluetooth.org/en-us/specification/assigned-numbers/link-layer). */
   uint16_t  company_id;                 /**< Company ID, Nordic Semiconductor's company ID is 89 (0x0059) (https://www.bluetooth.org/apps/content/Default.aspx?doc_id=49708). */
-  uint16_t  subversion_number;          /**< LMP Sub Version number corresponds to the SoftDevice Config ID. */
+  uint16_t  subversion_number;          /**< Link Layer Sub Version number, corresponds to the SoftDevice Config ID or Firmware ID (FWID). */
 } ble_version_t;
 
 /** @} */
