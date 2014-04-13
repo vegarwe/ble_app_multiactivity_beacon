@@ -51,6 +51,7 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
 
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
+    app_beacon_sd_evt_signal_handler(sys_evt);
 }
 
 
