@@ -1,0 +1,9 @@
+JLinkLog.txt
+JLinkSettings.ini
+_build/
+*uvgui*
+ble_*.dep
+*uvopt.bak
+*uvproj.bak
+tmp/
+
