@@ -1,59 +1,39 @@
 #include <stdint.h>
 #include <string.h>
-#include "ble.h"
 #include "nrf.h"
-#include "nrf51_bitfields.h"
-#include "nrf_soc.h"
 #include "nrf_sdm.h"
 
 #include "app_beacon.h"
+#include "app_error.h"
+
+static ble_beacon_init_t beacon_init = {
+    .uuid = { 0xff, 0xfe, 0x2d, 0x12, 0x1e, 0x4b, 0x0f, 0xa4,
+              0x99, 0x4e, 0xce, 0xb5, 0x31, 0xf4, 0x05, 0x45 },
+    .adv_interval = 800,
+    .major        = 0x1234,
+    .minor        = 0x5678
+};
 
 void assert_nrf_callback(uint32_t pc, uint16_t line_num, const uint8_t * p_file_name)
 {
-    (void)pc;
     while(true) {}
 }
-
 
 static void ble_stack_init(void)
 {
     uint32_t err_code;
 
     err_code = sd_softdevice_enable(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, assert_nrf_callback);
-    sd_nvic_EnableIRQ(SD_EVT_IRQn);
+    APP_ERR_CHECK(err_code);
+
+    err_code = sd_nvic_EnableIRQ(SD_EVT_IRQn);
+    APP_ERR_CHECK(err_code);
 }
-
-static void on_ble_evt(ble_evt_t * p_ble_evt)
-{
-    uint32_t        err_code;
-
-    switch (p_ble_evt->header.evt_id)
-    {
-        case BLE_GAP_EVT_CONNECTED:
-            break;
-        case BLE_GAP_EVT_DISCONNECTED:
-            break;
-        case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-            break;
-        case BLE_GAP_EVT_TIMEOUT:
-            break;
-        default:
-            break;
-    }
-}
-
-
-static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
-{
-    on_ble_evt(p_ble_evt);
-}
-
 
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
     app_beacon_sd_evt_signal_handler(sys_evt);
 }
-
 
 void SD_EVT_IRQHandler(void)
 {
@@ -63,8 +43,6 @@ void SD_EVT_IRQHandler(void)
     {
         sys_evt_dispatch(event);
     }
-
-    (void) ble_evt_dispatch;
 }
 
 
@@ -73,12 +51,13 @@ int main(void)
     uint32_t err_code;
 
     ble_stack_init();
-    app_beacon_init();
+    app_beacon_init(&beacon_init);
 
     app_beacon_start();
 
     for (;;)
     {
         err_code = sd_app_evt_wait();
+        APP_ERR_CHECK(err_code);
     }
 }
