@@ -1,5 +1,5 @@
-#ifndef APP_IBEACON_H__
-#define APP_IBEACON_H__
+#ifndef APP_BEACON_H__
+#define APP_BEACON_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -17,4 +17,4 @@ void app_beacon_sd_evt_signal_handler(uint32_t event);
 void app_beacon_init(ble_beacon_init_t * app_beacon_init);
 void app_beacon_start(void);
 
-#endif // APP_IBEACON_H__
+#endif // APP_BEACON_H__
