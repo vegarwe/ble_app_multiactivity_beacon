@@ -2,16 +2,14 @@
 #include <string.h>
 #include "nrf.h"
 #include "nrf_sdm.h"
+#include "ble_gap.h"
 
-#include "app_beacon.h"
+#include "app_beacon_scanner.h"
 #include "app_error.h"
 
-static ble_beacon_init_t beacon_init = {
+static ble_beacon_scanner_init_t beacon_scanner_init = {
     .uuid = { 0xff, 0xfe, 0x2d, 0x12, 0x1e, 0x4b, 0x0f, 0xa4,
-              0x99, 0x4e, 0xce, 0xb5, 0x31, 0xf4, 0x05, 0x45 },
-    .adv_interval = 800,
-    .major        = 0x1234,
-    .minor        = 0x5678
+              0x99, 0x4e, 0xce, 0xb5, 0x31, 0xf4, 0x05, 0x45 }
 };
 
 void assert_nrf_callback(uint32_t pc, uint16_t line_num, const uint8_t * p_file_name)
@@ -32,7 +30,7 @@ static void ble_stack_init(void)
 
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
-    app_beacon_sd_evt_signal_handler(sys_evt);
+    app_beacon_scanner_sd_evt_signal_handler(sys_evt);
 }
 
 void SD_EVT_IRQHandler(void)
@@ -51,9 +49,19 @@ int main(void)
     uint32_t err_code;
 
     ble_stack_init();
-    app_beacon_init(&beacon_init);
+    app_beacon_scanner_init(&beacon_scanner_init);
 
-    app_beacon_start();
+    app_beacon_scanner_start();
+
+    {
+        ble_gap_adv_params_t adv_params;
+        adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
+        adv_params.p_peer_addr = 0;
+        adv_params.fp          = BLE_GAP_ADV_FP_ANY;
+        adv_params.interval    = 500;
+        adv_params.timeout     = 0;
+        sd_ble_gap_adv_start(&adv_params);
+    }
 
     for (;;)
     {
