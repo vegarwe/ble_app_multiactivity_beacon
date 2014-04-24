@@ -237,7 +237,11 @@ void app_beacon_sd_evt_signal_handler(uint32_t event)
     switch (event)
     {
         case NRF_EVT_RADIO_SESSION_IDLE:
-            sd_radio_session_close();
+            if (m_beacon.is_running)
+            {
+                m_beacon.is_running = false;
+                sd_radio_session_close();
+            }
             break;
         case NRF_EVT_RADIO_SESSION_CLOSED:
             break;

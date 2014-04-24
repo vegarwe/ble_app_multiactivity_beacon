@@ -4,8 +4,17 @@
 #include "nrf_sdm.h"
 #include "ble_gap.h"
 
-#include "app_beacon_scanner.h"
 #include "app_error.h"
+#include "app_beacon.h"
+#include "app_beacon_scanner.h"
+
+static ble_beacon_init_t beacon_init = {
+    .uuid = { 0xff, 0xfe, 0x2d, 0x12, 0x1e, 0x4b, 0x0f, 0xa4,
+              0x99, 0x4e, 0xce, 0xb5, 0x31, 0xf4, 0x05, 0x45 },
+    .adv_interval = 800,
+    .major        = 0x1234,
+    .minor        = 0x5678
+};
 
 static ble_beacon_scanner_init_t beacon_scanner_init = {
     .uuid = { 0xff, 0xfe, 0x2d, 0x12, 0x1e, 0x4b, 0x0f, 0xa4,
@@ -30,6 +39,7 @@ static void ble_stack_init(void)
 
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
+    app_beacon_sd_evt_signal_handler(sys_evt);
     app_beacon_scanner_sd_evt_signal_handler(sys_evt);
 }
 
@@ -49,8 +59,13 @@ int main(void)
     uint32_t err_code;
 
     ble_stack_init();
-    app_beacon_scanner_init(&beacon_scanner_init);
 
+    //(void)beacon_scanner_init;
+    //app_beacon_init(&beacon_init);
+    //app_beacon_start();
+
+    (void)beacon_init;
+    app_beacon_scanner_init(&beacon_scanner_init);
     app_beacon_scanner_start();
 
     {
