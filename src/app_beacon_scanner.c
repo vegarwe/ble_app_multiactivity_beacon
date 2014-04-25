@@ -27,6 +27,39 @@ enum mode_t
   SCN_DONE
 };
 
+static bool field_has_beacon_data(uint8_t * field, uint8_t field_len)
+{
+    if (field_len != 0x1a)                     return false; // The beacon data field is 0x1a long
+    if (field[0]  != 0xff)                     return false; // No manufactor specific data
+    if (field[1]  != 0x4c || field[2] != 0x00) return false; // Not Apple Inc. 
+    if (field[3]  == 0x02)                                   // Device type beacon
+    {
+        return true;
+    }
+    return false;
+}
+
+static bool has_beacon_data(uint8_t * pdu)
+{
+    uint8_t i         = 9; // Adv data start at this index in the pdu
+    uint8_t field_len = 0;
+    while (i < 40)
+    {
+        field_len = pdu[i];
+        if (field_len > 39) // Field data corrupt or invalid
+        {
+            return false;
+        }
+        if (field_has_beacon_data(&pdu[i+1], field_len))
+        {
+            return true;
+        }
+        i += field_len + 1;
+
+    }
+    return false;
+}
+
 static nrf_radio_request_t * m_reqeust_earliest(enum NRF_RADIO_PRIORITY priority)
 {
     m_beacon_scanner.timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
@@ -98,7 +131,7 @@ static void m_handle_start(void)
 
     // Set up rescheduling
     NRF_RADIO_MULTITIMER->INTENSET = (1UL << TIMER_INTENSET_COMPARE1_Pos);
-    NRF_RADIO_MULTITIMER->CC[1]    = TIMESLOT_LEN_US - 500;
+    NRF_RADIO_MULTITIMER->CC[1]    = TIMESLOT_LEN_US - 800;
     NVIC_EnableIRQ(NRF_RADIO_MULTITIMER_IRQn);
 }
 
@@ -146,7 +179,10 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
         {
             NRF_RADIO->EVENTS_ADDRESS = 0;
 
-            NRF_GPIO->OUT ^= (1UL << 18);
+            if (has_beacon_data(&m_beacon_scanner.scn_pdu[0]))
+            {
+                NRF_GPIO->OUT ^= (1UL << 18);
+            }
         }
 
         if (NRF_RADIO->EVENTS_DISABLED == 1)
@@ -187,7 +223,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
         }
         break;
     case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED:
-        NRF_RADIO_MULTITIMER->CC[1]    += TIMESLOT_LEN_US - 500;
+        NRF_RADIO_MULTITIMER->CC[1]    += TIMESLOT_LEN_US;
         break;
     default:
       APP_ASSERT( false );
