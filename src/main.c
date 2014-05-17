@@ -44,8 +44,8 @@ static void advertiser_start(void)
         .type        = BLE_GAP_ADV_TYPE_ADV_IND,
         .p_peer_addr = 0,
         .fp          = BLE_GAP_ADV_FP_ANY,
-        .interval    = 100
-        .timeout     = 0;
+        .interval    = 100,
+        .timeout     = 0
     };
     sd_ble_gap_adv_start(&adv_params);
 }
