@@ -416,6 +416,11 @@
               <FileType>1</FileType>
               <FilePath>..\src\app_beacon.c</FilePath>
             </File>
+            <File>
+              <FileName>app_beacon_scanner.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\src\app_beacon_scanner.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
