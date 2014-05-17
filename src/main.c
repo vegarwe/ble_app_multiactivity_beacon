@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "nrf.h"
+#include "ble.h"
 #include "nrf_sdm.h"
 #include "ble_gap.h"
 
@@ -37,19 +38,72 @@ static void ble_stack_init(void)
     APP_ERR_CHECK(err_code);
 }
 
+static void advertiser_start(void)
+{
+    static ble_gap_adv_params_t adv_params = {
+        .type        = BLE_GAP_ADV_TYPE_ADV_IND,
+        .p_peer_addr = 0,
+        .fp          = BLE_GAP_ADV_FP_ANY,
+        .interval    = 100
+        .timeout     = 0;
+    };
+    sd_ble_gap_adv_start(&adv_params);
+}
+
+static void on_ble_evt(ble_evt_t * p_ble_evt)
+{
+    uint32_t        err_code      = NRF_SUCCESS;
+    static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;
+
+    switch (p_ble_evt->header.evt_id)
+    {
+        case BLE_GAP_EVT_CONNECTED:
+            NRF_GPIO->DIRSET = (1UL << 18);
+            NRF_GPIO->OUTSET = (1UL << 18);
+            m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+            break;
+
+        case BLE_GAP_EVT_DISCONNECTED:
+            NRF_GPIO->OUTCLR = (1UL << 18);
+            advertiser_start();
+            break;
+
+        default:
+            break;
+    }
+
+    APP_ERR_CHECK(err_code);
+}
+
 static void sys_evt_dispatch(uint32_t sys_evt)
 {
     app_beacon_sd_evt_signal_handler(sys_evt);
     app_beacon_scanner_sd_evt_signal_handler(sys_evt);
 }
 
+static void ble_evt_dispatch(ble_evt_t * p_ble_evt)
+{
+    on_ble_evt(p_ble_evt);
+}
+
 void SD_EVT_IRQHandler(void)
 {
+    uint8_t    evt_buf[sizeof(ble_evt_t) + BLE_L2CAP_MTU_DEF];
+    uint16_t   evt_len;
+    ble_evt_t *p_ble_evt = (ble_evt_t *) evt_buf;
+
     uint32_t event;
 
-    if ( sd_evt_get(&event) == NRF_SUCCESS )
+    while ( sd_evt_get(&event) == NRF_SUCCESS )
     {
         sys_evt_dispatch(event);
+    }
+
+    evt_len = sizeof(evt_buf);
+    while (sd_ble_evt_get(evt_buf, &evt_len) == NRF_SUCCESS)
+    {
+        ble_evt_dispatch(p_ble_evt);
+        evt_len = sizeof(evt_buf);
     }
 }
 
@@ -68,15 +122,7 @@ int main(void)
     app_beacon_scanner_init(&beacon_scanner_init);
     app_beacon_scanner_start();
 
-    {
-        ble_gap_adv_params_t adv_params;
-        adv_params.type        = BLE_GAP_ADV_TYPE_ADV_IND;
-        adv_params.p_peer_addr = 0;
-        adv_params.fp          = BLE_GAP_ADV_FP_ANY;
-        adv_params.interval    = 500;
-        adv_params.timeout     = 0;
-        sd_ble_gap_adv_start(&adv_params);
-    }
+    advertiser_start();
 
     for (;;)
     {
