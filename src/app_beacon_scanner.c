@@ -100,7 +100,7 @@ static void m_configure_radio()
                               | (((0UL)                           << RADIO_PCNF1_STATLEN_Pos   ) & RADIO_PCNF1_STATLEN_Msk)
                               | ((((uint32_t) 37)                 << RADIO_PCNF1_MAXLEN_Pos    ) & RADIO_PCNF1_MAXLEN_Msk)
                               | ((RADIO_PCNF1_WHITEEN_Enabled     << RADIO_PCNF1_WHITEEN_Pos   ) & RADIO_PCNF1_WHITEEN_Msk);
-    NRF_RADIO->CRCCNF       =   (((RADIO_CRCCNF_SKIP_ADDR_Skip)   << RADIO_CRCCNF_SKIP_ADDR_Pos) & RADIO_CRCCNF_SKIP_ADDR_Msk)
+    NRF_RADIO->CRCCNF       =   (((RADIO_CRCCNF_SKIPADDR_Skip)    << RADIO_CRCCNF_SKIPADDR_Pos ) & RADIO_CRCCNF_SKIPADDR_Msk)
                               | (((RADIO_CRCCNF_LEN_Three)        << RADIO_CRCCNF_LEN_Pos      ) & RADIO_CRCCNF_LEN_Msk);
     NRF_RADIO->CRCPOLY      = 0x0000065b;
     NRF_RADIO->RXADDRESSES  = ((RADIO_RXADDRESSES_ADDR0_Enabled)  << RADIO_RXADDRESSES_ADDR0_Pos);
@@ -120,24 +120,24 @@ static void m_handle_start(void)
 {
     // Configure TX_EN on TIMER EVENT_0
     NRF_PPI->CH[8].TEP    = (uint32_t)(&NRF_RADIO->TASKS_DISABLE);
-    NRF_PPI->CH[8].EEP    = (uint32_t)(&NRF_RADIO_MULTITIMER->EVENTS_COMPARE[0]);
+    NRF_PPI->CH[8].EEP    = (uint32_t)(&NRF_TIMER0->EVENTS_COMPARE[0]);
     NRF_PPI->CHENSET      = (1 << 8);
 
     
     // Configure and initiate radio
     m_configure_radio();
     NRF_RADIO->TASKS_DISABLE = 1;
-    NRF_RADIO_MULTITIMER->CC[0] = 0; // TODO: Necessary?
+    NRF_TIMER0->CC[0] = 0; // TODO: Necessary?
 
     // Set up rescheduling
-    NRF_RADIO_MULTITIMER->INTENSET = (1UL << TIMER_INTENSET_COMPARE1_Pos);
-    NRF_RADIO_MULTITIMER->CC[1]    = TIMESLOT_LEN_US - 800;
-    NVIC_EnableIRQ(NRF_RADIO_MULTITIMER_IRQn);
+    NRF_TIMER0->INTENSET = (1UL << TIMER_INTENSET_COMPARE1_Pos);
+    NRF_TIMER0->CC[1]    = TIMESLOT_LEN_US - 800;
+    NVIC_EnableIRQ(TIMER0_IRQn);
 }
 
 static void m_handle_radio_disabled(enum mode_t mode)
 {
-    NRF_RADIO_MULTITIMER->CC[0]       += SCAN_INTERVAL_US;
+    NRF_TIMER0->CC[0]       += SCAN_INTERVAL_US;
     
     switch (mode)
     {
@@ -200,10 +200,10 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
             mode++;
         }
         break;
-    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_MULTITIMER:
-        if (NRF_RADIO_MULTITIMER->EVENTS_COMPARE[1] == 1)
+    case NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0:
+        if (NRF_TIMER0->EVENTS_COMPARE[1] == 1)
         {
-            NRF_RADIO_MULTITIMER->EVENTS_COMPARE[1] = 0;
+            NRF_TIMER0->EVENTS_COMPARE[1] = 0;
 
             signal_callback_return_param.params.extend.length_us = TIMESLOT_LEN_US;
             signal_callback_return_param.callback_action         = NRF_RADIO_SIGNAL_CALLBACK_ACTION_EXTEND;
@@ -223,7 +223,7 @@ static nrf_radio_signal_callback_return_param_t * m_timeslot_callback(uint8_t si
         }
         break;
     case NRF_RADIO_CALLBACK_SIGNAL_TYPE_EXTEND_SUCCEEDED:
-        NRF_RADIO_MULTITIMER->CC[1]    += TIMESLOT_LEN_US;
+        NRF_TIMER0->CC[1]    += TIMESLOT_LEN_US;
         break;
     default:
       APP_ASSERT( false );

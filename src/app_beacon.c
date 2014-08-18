@@ -133,7 +133,7 @@ static void m_configure_radio()
                               | (((0UL)                           << RADIO_PCNF1_STATLEN_Pos   ) & RADIO_PCNF1_STATLEN_Msk)
                               | ((((uint32_t) 37)                 << RADIO_PCNF1_MAXLEN_Pos    ) & RADIO_PCNF1_MAXLEN_Msk)
                               | ((RADIO_PCNF1_WHITEEN_Enabled     << RADIO_PCNF1_WHITEEN_Pos   ) & RADIO_PCNF1_WHITEEN_Msk);
-    NRF_RADIO->CRCCNF       =   (((RADIO_CRCCNF_SKIP_ADDR_Skip)   << RADIO_CRCCNF_SKIP_ADDR_Pos) & RADIO_CRCCNF_SKIP_ADDR_Msk)
+    NRF_RADIO->CRCCNF       =   (((RADIO_CRCCNF_SKIPADDR_Skip)    << RADIO_CRCCNF_SKIPADDR_Pos ) & RADIO_CRCCNF_SKIPADDR_Msk)
                               | (((RADIO_CRCCNF_LEN_Three)        << RADIO_CRCCNF_LEN_Pos      ) & RADIO_CRCCNF_LEN_Msk);
     NRF_RADIO->CRCPOLY      = 0x0000065b;
     NRF_RADIO->RXADDRESSES  = ((RADIO_RXADDRESSES_ADDR0_Enabled)  << RADIO_RXADDRESSES_ADDR0_Pos);
@@ -153,7 +153,7 @@ void m_handle_start(void)
 {
     // Configure TX_EN on TIMER EVENT_0
     NRF_PPI->CH[8].TEP    = (uint32_t)(&NRF_RADIO->TASKS_TXEN);
-    NRF_PPI->CH[8].EEP    = (uint32_t)(&NRF_RADIO_MULTITIMER->EVENTS_COMPARE[0]);
+    NRF_PPI->CH[8].EEP    = (uint32_t)(&NRF_TIMER0->EVENTS_COMPARE[0]);
     NRF_PPI->CHENSET      = (1 << 8);
     
     // Configure and initiate radio
@@ -171,13 +171,13 @@ void m_handle_radio_disabled(enum mode_t mode)
             break;
         case ADV_RX_CH38:
             m_set_adv_ch(38);
-            NRF_RADIO_MULTITIMER->TASKS_CLEAR = 1;
-            NRF_RADIO_MULTITIMER->CC[0]       = 400;
+            NRF_TIMER0->TASKS_CLEAR = 1;
+            NRF_TIMER0->CC[0]       = 400;
             break;
         case ADV_RX_CH39:
             m_set_adv_ch(39);
-            NRF_RADIO_MULTITIMER->TASKS_CLEAR = 1;
-            NRF_RADIO_MULTITIMER->CC[0]       = 400;
+            NRF_TIMER0->TASKS_CLEAR = 1;
+            NRF_TIMER0->CC[0]       = 400;
             break;
         default:
             break;
@@ -274,7 +274,7 @@ void app_beacon_start(void)
 
     sd_radio_session_open(m_timeslot_callback);
     
-    m_reqeust_earliest(NRF_RADIO_PRIORITY_LOW);
+    m_reqeust_earliest(NRF_RADIO_PRIORITY_NORMAL);
 }
 
 void app_beacon_stop(void)
