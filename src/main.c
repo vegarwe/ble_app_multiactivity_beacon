@@ -34,12 +34,20 @@ static void ble_stack_init(void)
     err_code = sd_softdevice_enable(NRF_CLOCK_LFCLKSRC_XTAL_20_PPM, assert_nrf_callback);
     APP_ERR_CHECK(err_code);
 
+    ble_enable_params_t ble_enable_params;
+    memset(&ble_enable_params, 0, sizeof(ble_enable_params));
+    ble_enable_params.gatts_enable_params.service_changed = 0;
+    err_code = sd_ble_enable(&ble_enable_params);
+    APP_ERR_CHECK(err_code);
+
     err_code = sd_nvic_EnableIRQ(SD_EVT_IRQn);
     APP_ERR_CHECK(err_code);
 }
 
 static void advertiser_start(void)
 {
+    uint32_t err_code;
+
     static ble_gap_adv_params_t adv_params = {
         .type        = BLE_GAP_ADV_TYPE_ADV_IND,
         .p_peer_addr = 0,
@@ -47,7 +55,8 @@ static void advertiser_start(void)
         .interval    = 100,
         .timeout     = 0
     };
-    sd_ble_gap_adv_start(&adv_params);
+    err_code = sd_ble_gap_adv_start(&adv_params);
+    APP_ERR_CHECK(err_code);
 }
 
 static void on_ble_evt(ble_evt_t * p_ble_evt)
@@ -114,13 +123,13 @@ int main(void)
 
     ble_stack_init();
 
-    //(void)beacon_scanner_init;
-    //app_beacon_init(&beacon_init);
-    //app_beacon_start();
+    (void)beacon_scanner_init;
+    app_beacon_init(&beacon_init);
+    app_beacon_start();
 
-    (void)beacon_init;
-    app_beacon_scanner_init(&beacon_scanner_init);
-    app_beacon_scanner_start();
+    //(void)beacon_init;
+    //app_beacon_scanner_init(&beacon_scanner_init);
+    //app_beacon_scanner_start();
 
     advertiser_start();
 
